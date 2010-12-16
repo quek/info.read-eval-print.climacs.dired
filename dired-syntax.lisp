@@ -38,9 +38,10 @@
 (defun make-dired-buffer (path)
   (let ((buffer (make-new-buffer)))
     (iterate ((file (scan-directory (ensure-pathname-for-dired path))))
+      ;; TODO presentation
       (insert-buffer-object buffer (size buffer)
                             (if (directory-pathname-p file)
-                                (directory-namestring file)
+                                (car (last (pathname-directory file)))
                                 (file-namestring file)))
       (insert-buffer-object buffer (size buffer) #\newline))
     (clear-undo-history buffer)

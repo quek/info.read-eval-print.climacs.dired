@@ -5,6 +5,31 @@
 (define-syntax-command-table dired-table
     :errorp nil)
 
+
+;;;;;; presentation
+;;(define-presentation-type dired ()
+;;  :inherit-from 't)
+;;
+;;(define-presentation-method presentation-typep (object (type dired))
+;;  (pathnamep object))
+;;
+;;(define-presentation-method present (object (type dired) stream
+;;                                            (view textual-view)
+;;                                            &key)
+;;  (let ((stat (sb-posix:stat (namestring object)))
+;;        (name (if (directory-pathname-p object)
+;;                  (car (last (pathname-directory object)))
+;;                  (file-namestring object))))
+;;    (format stream
+;;            "  ~o ~a ~a ~6,d ~a ~a"
+;;            (sb-posix:stat-mode stat)
+;;            (file-author object)
+;;            (sb-posix:group-name (sb-posix:getgrgid (sb-posix:stat-gid stat)))
+;;            (sb-posix:stat-size stat)
+;;            (dt:|yyyy-mm-dd hh:mm| (dt:from-posix-time (sb-posix:stat-mtime stat)))
+;;            name)))
+
+
 ;;;; dired-syntax
 (define-syntax dired-syntax (fundamental-syntax)
   ()
@@ -35,15 +60,18 @@
   (make-pathname :directory (namestring path)
                  :name :wild))
 
+;;(defun make-buffer-contents (path)
+;;  (loop for x in (directory (ensure-pathname-for-dired path))
+;;                               do (defmethod presentation-type-of ((object (eql x)))
+;;                                    'dired)
+;;                               nconc (list x #\Newline)))
+
+(defun make-buffer-contents (path)
+  (trivial-shell:shell-command #"""ls -al #,(namestring path)"""))
+
 (defun make-dired-buffer (path)
   (let ((buffer (make-new-buffer)))
-    (iterate ((file (scan-directory (ensure-pathname-for-dired path))))
-      ;; TODO presentation
-      (insert-buffer-object buffer (size buffer)
-                            (if (directory-pathname-p file)
-                                (car (last (pathname-directory file)))
-                                (file-namestring file)))
-      (insert-buffer-object buffer (size buffer) #\newline))
+    (insert-buffer-sequence buffer 0 (make-buffer-contents path))
     (clear-undo-history buffer)
     buffer))
 
@@ -76,7 +104,7 @@
            (setf (current-view (current-window)) view)
            (evaluate-attribute-line view)
            (setf (filepath buffer) (pathname path)
-                 (read-only-p buffer) nil)
+                 (read-only-p buffer) t)
            (beginning-of-buffer (point view))
            buffer))))
 
@@ -95,7 +123,7 @@
 #|
 (define-command (com-set-syntax :name t :command-table buffer-table) 
     ((syntax 'syntax
-      :prompt "Name of syntax"))
+             :prompt "Name of syntax"))
   "Prompts for a syntax to set for the current buffer.
    Setting a syntax will cause the buffer to be reparsed using the new syntax."
   (set-syntax (current-view) syntax))

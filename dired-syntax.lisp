@@ -2,9 +2,8 @@
 
 (in-package :info.read-eval-print.climacs.dired)
 
-(define-syntax-command-table dired-table
-    :errorp nil)
-
+(define-syntax-command-table dired-table :errorp nil
+  :inherit-from '(drei:movement-table climacs-gui:window-table))
 
 ;;;;;; presentation
 ;;(define-presentation-type dired ()
@@ -146,3 +145,12 @@
   (dired-find-file path))
 
 (set-key 'com-dired-find-file 'dired-table '((#\Newline)))
+
+(set-key `(drei-commands::com-forward-line ,*numeric-argument-marker*) 'dired-table
+         '((#\n)))
+
+(set-key `(drei-commands::com-backward-line ,*numeric-argument-marker*) 'dired-table
+         '((#\p)))
+
+(set-key `(climacs-commands::com-kill-view (current-view)) 'dired-table
+	 '((#\q)))

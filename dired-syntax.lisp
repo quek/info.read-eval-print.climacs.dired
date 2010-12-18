@@ -146,12 +146,3 @@
   (dired-find-file path))
 
 (set-key 'com-dired-find-file 'dired-table '((#\Newline)))
-
-#|
-(define-command (com-set-syntax :name t :command-table buffer-table) 
-    ((syntax 'syntax
-             :prompt "Name of syntax"))
-  "Prompts for a syntax to set for the current buffer.
-   Setting a syntax will cause the buffer to be reparsed using the new syntax."
-  (set-syntax (current-view) syntax))
-|#

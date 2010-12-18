@@ -48,9 +48,9 @@
 
 ;;;; dired-mode
 (define-syntax-mode dired-mode ()
-  ()
+  ((path :initarg :path))
   (:documentation "A mode for Directory editing.")
-  (:applicable-syntaxes dired-syntax))
+  (:applicable-syntaxes fundamental-syntax))
 
 
 (defmethod syntax-command-tables append ((syntax dired-mode))
@@ -67,7 +67,8 @@
 ;;                               nconc (list x #\Newline)))
 
 (defun make-buffer-contents (path)
-  (trivial-shell:shell-command #"""ls -al #,(namestring path)"""))
+  (str (namestring  path) #\Newline
+       (trivial-shell:shell-command #"""ls -al #,(namestring path)""")))
 
 (defun make-dired-buffer (path)
   (let ((buffer (make-new-buffer)))
@@ -101,6 +102,7 @@
                  (file-write-time buffer) nil
                  (needs-saving buffer) nil
                  (name buffer) (namestring path))
+           (enable-mode view 'dired-mode :path path)
            (setf (current-view (current-window)) view)
            (evaluate-attribute-line view)
            (setf (filepath buffer) (pathname path)
@@ -119,6 +121,31 @@
   (handler-case (find-directory path)
     (file-error (e)
       (display-message "~a" e))))
+
+(defun dired-find-file (path)
+  (unless path
+    (let* ((dir (slot-value (syntax (current-view)) 'path))
+           (mark (point))
+           (line (region-to-string (beginning-of-line (clone-mark mark))
+                                   (end-of-line (clone-mark mark)))))
+      (ppcre:register-groups-bind (d file)
+          ("(.)(?:[^ ]+ +){7}(.*\)" line)
+        (setf path (merge-pathnames (str file (when (string= "d" d) "/")) dir)))))
+  (when path
+    (if (directory-pathname-p path)
+        (find-directory path)
+        (find-file path))))
+
+
+(define-command (com-dired-find-file :name t :command-table dired-table)
+    ((path 'pathname
+           :prompt "File: "
+           :prompt-mode :raw
+           :default-type 'pathname))
+  "Find file."
+  (dired-find-file path))
+
+(set-key 'com-dired-find-file 'dired-table '((#\Newline)))
 
 #|
 (define-command (com-set-syntax :name t :command-table buffer-table) 

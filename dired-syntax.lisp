@@ -67,7 +67,7 @@
 
 (defun make-buffer-contents (path)
   (str (namestring  path) #\Newline
-       (trivial-shell:shell-command #"""ls -al #,(namestring path)""")))
+       (trivial-shell:shell-command #"""ls -alh '#,(namestring path)'""")))
 
 (defun make-dired-buffer (path)
   (let ((buffer (make-new-buffer)))
@@ -109,6 +109,12 @@
            (beginning-of-buffer (point view))
            buffer))))
 
+(defun ensure-/ (path)
+  (let ((namestring (namestring path)))
+    (if (position #\/ namestring :start (1- (length namestring)))
+        path
+        (pathname (str namestring #\/)))))
+
 (define-command (com-dired :name t :command-table esa-io-table)
     ((path 'pathname
            :prompt "Dired (directory): "
@@ -117,9 +123,12 @@
            :default-type 'pathname
            :insert-default t))
   "Prompt for a directory name then edit that directory."
-  (handler-case (find-directory path)
+  (handler-case (find-directory (ensure-/ path))
     (file-error (e)
       (display-message "~a" e))))
+
+(set-key `(com-dired ,*unsupplied-argument-marker*) 'esa-io-table '((#\x :control) (#\d)))
+
 
 (defun dired-find-file (path)
   (unless path
@@ -149,8 +158,14 @@
 (set-key `(drei-commands::com-forward-line ,*numeric-argument-marker*) 'dired-table
          '((#\n)))
 
+(set-key `(drei-commands::com-forward-line ,*numeric-argument-marker*) 'dired-table
+         '((#\j)))
+
 (set-key `(drei-commands::com-backward-line ,*numeric-argument-marker*) 'dired-table
          '((#\p)))
+
+(set-key `(drei-commands::com-backward-line ,*numeric-argument-marker*) 'dired-table
+         '((#\k)))
 
 (set-key `(climacs-commands::com-kill-view (current-view)) 'dired-table
 	 '((#\q)))

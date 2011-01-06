@@ -153,6 +153,10 @@
   "Find file."
   (dired-find-file path))
 
+(define-command (com-dired-up-directory :name t :command-table dired-table) ()
+  (let ((dir (slot-value (syntax (current-view)) 'path)))
+    (find-directory (make-pathname :directory (butlast (pathname-directory dir))))))
+
 (set-key 'com-dired-find-file 'dired-table '((#\Newline)))
 
 (set-key `(drei-commands::com-forward-line ,*numeric-argument-marker*) 'dired-table
@@ -169,3 +173,5 @@
 
 (set-key `(climacs-commands::com-kill-view (current-view)) 'dired-table
 	 '((#\q)))
+
+(set-key 'com-dired-up-directory 'dired-table '((#\^)))

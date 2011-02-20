@@ -2,6 +2,8 @@
 
 (in-package :info.read-eval-print.climacs.dired)
 
+(named-readtables:in-readtable quek:syntax)
+
 (define-syntax-command-table dired-table :errorp nil
   :inherit-from '(drei:movement-table climacs-gui:window-table))
 

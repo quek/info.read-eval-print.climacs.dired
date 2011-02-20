@@ -5,4 +5,4 @@
   ;; add new files to this list:
   :components ((:file "package")
                (:file "dired-syntax"))
-  :depends-on (:climacs :quek :trivial-shell))
+  :depends-on (:quek :trivial-shell))
